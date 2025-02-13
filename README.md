@@ -1,24 +1,14 @@
 Dies ist eine Komplettlösung zur Verarbeitung, Vektorisierung und Verwaltung von Dokumenten. Die Anwendung kombiniert eine Chat-Oberfläche, eine Vektordatenbank, einen automatisierten n8n Workflow sowie einen KMS-Dateimanager, der auf Flask basiert. Außerdem besteht die Möglichkeit, Zotero-Bibliotheken zu importieren und verlinkte Dokumente automatisch herunterzuladen und einzubinden.
 
 ---
-## Inhaltsverzeichnis
-
-- [Überblick](#überblick)
-- [[#Architektur und Komponenten]]
-- [[#Einzelne Endpunkte & Zugriff]]
-	- [[#Chat-Oberfläche (OpenWebUI)]]
-	- [[#Vektordatenbank (Qdrant)]]
-	- [[#n8n Workflow]]
-	- [[#KMS-Dateimanager]]
-- [[#Funktionen & Features]]
-	- [[#Dateiupload und -löschung]]
-	- [[#Zotero Pull]]
-	- [[#Fehler und Lösungsansätze]] 
-
----
 ## Überblick
 
-Die Anwendung ermöglicht es, Dokumente (PDF, MD, TXT) zentral zu verwalten und in eine Vektordatenbank (Qdrant) einzubinden. Eine Chat-Oberfläche (OpenWebUI) erlaubt die Interaktion mit den eingebundenen Inhalten, während ein n8n Workflow den automatisierten Import und die Vektorisierung übernimmt. Über den KMS-Dateimanager können Benutzer Dateien hochladen, löschen und verwalten sowie Zotero-Bibliotheken importieren, um verlinkte Dokumente automatisch herunterzuladen.
+Die Anwendung ermöglicht es, Dokumente (PDF, MD) zentral zu verwalten und in eine Vektordatenbank (Qdrant) einzubinden. Eine Chat-Oberfläche (OpenWebUI) erlaubt die Interaktion mit den eingebundenen Inhalten, während ein n8n Workflow den automatisierten Import und die Vektorisierung übernimmt. Über den KMS-Dateimanager können Benutzer Dateien hochladen, löschen und verwalten sowie Zotero-Bibliotheken importieren, um verlinkte Dokumente automatisch herunterzuladen.
+
+---
+## Installation
+
+Eine Einfache Installation ist über Docker Desktop möglich indem man das Repository cloned oder folgenden Link benutzt: https://open.docker.com/dashboard/dev-envs?url=https://github.com/RetroArtur/KMS/
 
 ---
 ## Architektur und Komponenten
@@ -28,7 +18,7 @@ Die Anwendung setzt sich aus folgenden Hauptkomponenten zusammen:
 - **Chat-Oberfläche:** Bereitgestellt über OpenWebUI, dient als Frontend zur Interaktion mit den eingebundenen Dokumenten.
 - **Vektordatenbank:** Dokumente werden in Qdrant gespeichert und vektorisiert. 
 - **n8n Workflow:** Automatisiert den Import von Dateien aus dem Docker-Ordner `/data/shared/Exports`, die Vektorisierung dieser Dokumente in Qdrant und die Generierung der Antworten des phi4-KI-Modells.
-- **KMS-Dateimanager:** Ein Flask-basiertes Python-Skript, das als Datei-Manager fungiert. Über diesen Manager können Dateien (PDF, MD, TXT) hochgeladen, eingesehen und gelöscht werden. Der Manager zeigt alle Dateien im Docker-Ordner `/data/shared/Exports` an.
+- **KMS-Dateimanager:** Ein Flask-basiertes Python-Skript, das als Datei-Manager fungiert. Über diesen Manager können Dateien (PDF, MD) hochgeladen, eingesehen und gelöscht werden. Der Manager zeigt alle Dateien im Docker-Ordner `/data/shared/Exports` an.
 
 ---
 ## Einzelne Endpunkte & Zugriff
@@ -54,7 +44,7 @@ Die Anwendung setzt sich aus folgenden Hauptkomponenten zusammen:
 - **URL:** [http://localhost:5000](http://localhost:5000)
 - **Funktion:** 
 	- Anzeige aller wichtigen Dateien im Ordner `/data/shared/Exports`.
-	- Upload und Löschung von Dateien (PDF, MD, TXT).
+	- Upload und Löschung von Dateien (PDF, MD).
 	- Verwaltung der Dokumente, die später vom n8n Workflow eingelesen und in Qdrant eingebunden werden.
 
 ---
