@@ -8,7 +8,7 @@ Die Anwendung ermöglicht es, Dokumente (PDF, MD) zentral zu verwalten und in ei
 ---
 ## Installation
 
-Eine Einfache Installation ist über Docker Desktop möglich indem man das Repository cloned oder folgenden Link benutzt: https://open.docker.com/dashboard/dev-envs?url=https://github.com/RetroArtur/KMS/
+Eine Einfache Installation ist über Docker Desktop möglich oder indem man das Repository cloned und per docker compose hochfährt.
 
 ---
 ## Architektur und Komponenten
@@ -57,7 +57,7 @@ Die Anwendung setzt sich aus folgenden Hauptkomponenten zusammen:
 
 ### Dateiupload und -löschung
 
-- **Dateiformate:** MD, TXT und PDF. 
+- **Dateiformate:** MD und PDF. 
 - **Funktion:** Über den KMS-Dateimanager können Benutzer Dateien hochladen und löschen. Alle hochgeladenen Dateien werden automatisch in den Docker-Ordner `/data/shared/Exports` geschrieben und anschließend vom n8n Workflow verarbeitet.
 
 ### Zotero Pull
