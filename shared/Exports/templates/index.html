@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>File Upload</title>
+    <style>
+        body {
+            background-color: #171717;
+            color: #ffffff;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .container {
+            background: #262626;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+        
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+            text-align: center;
+        }
+        input[type="file"] {
+            margin: 20px 0;
+        }
+        button {
+            background-color: #444;
+            border: none;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            padding: 10px 20px;
+            color: white;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #666;
+        }
+        a {
+            color: white;
+            text-decoration: none;
+            display: block;
+            margin-top: 20px;
+        }
+        
+  
+        #message {
+            margin-top: 20px;
+        }
+        .file-list {
+        margin-top: 20px;
+        text-align: left;
+        max-height: 300px;
+        overflow-y: auto;
+    }
+    .file-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 5px;
+        border-bottom: 1px solid #444;
+    }
+    .delete-btn {
+        background-color: #ff4444;
+        padding: 5px 10px;
+        margin-left: 10px;
+    }
+    .delete-btn:hover {
+        background-color: #cc0000;
+    }
+    .navigation-button {
+        font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+        background-color: #444;
+        border: none;
+        padding: 10px 20px;
+        color: white;
+        border-radius: 5px;
+        cursor: pointer;
+        text-decoration: none;
+        display: inline-block;
+        margin-top: 20px;
+    }
+    
+    .navigation-button:hover {
+        background-color: #666;
+    }
+    .upload-container {
+        font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+        margin: 20px 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 15px;
+    }
+
+    .custom-file-upload {
+        border: 2px dashed #666;
+        border-radius: 5px;
+        padding: 15px;
+        width: 80%;
+        text-align: center;
+        cursor: pointer;
+        transition: border-color 0.3s ease;
+    }
+
+    .custom-file-upload:hover {
+        border-color: #888;
+    }
+
+    .custom-file-upload input[type="file"] {
+        display: none;
+    }
+
+    .button-group {
+        display: flex;
+        gap: 10px;
+        margin-top: 15px;
+    }
+    .button-group {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 15px;
+    width: 80%;
+}
+
+.button-group button {
+    width: 100%;
+}
+
+.custom-file-upload {
+    margin-bottom: 10px;
+}
+
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>KMS Datei Manager</h1>
+        
+        <div class="upload-container">
+            <label class="custom-file-upload">
+                <input type="file" id="fileInput" accept=".pdf,.md" hidden/>
+                <span id="fileLabel">Dokument (.pdf, .md) zum Hochladen auswählen</span>
+            </label>
+            <label class="custom-file-upload">
+                <input type="file" id="jsonFileInput" accept=".json" hidden/>
+                <span id="jsonFileLabel">Zotero-JSON Datei auswählen</span>
+            </label>
+        </div>
+        <button onclick="runScript()" style="margin-top: 15px; width: 80%;">Zotero Pull durchführen</button>
+    
+        <div id="message"></div>
+        <div class="file-list" id="fileList">
+        </div>
+        <a href="http://localhost:3000/" class="navigation-button">Zum KMS-Chat</a>
+    </div>
+    
+    <script>
+         function uploadFile() {
+            let fileInput = document.getElementById('fileInput');
+            let file = fileInput.files[0];
+            let formData = new FormData();
+            formData.append('file', file);
+
+            fetch('/upload', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('message').innerText = data.success || data.error;
+                loadFiles(); // Refresh the file list after upload
+            });
+        }
+
+        function runScript() {
+            fetch('/run-script', {
+                method: 'POST'
+            }).then(response => response.json()).then(data => {
+                document.getElementById('message').innerText = data.success || data.error;
+            });
+        }
+
+        function loadFiles() {
+            fetch('/list-files')
+                .then(response => response.json())
+                .then(data => {
+                    const fileList = document.getElementById('fileList');
+                    fileList.innerHTML = '';
+                    data.files.forEach(file => {
+                        const fileItem = document.createElement('div');
+                        fileItem.className = 'file-item';
+                        fileItem.innerHTML = `
+                            <span>${file}</span>
+                            <button class="delete-btn" onclick="deleteFile('${file}')">Löschen</button>
+                        `;
+                        fileList.appendChild(fileItem);
+                    });
+                });
+        }
+
+        function deleteFile(filename) {
+            if (confirm(`Bist du sicher dass du folgende Datei löschen möchtest? ${filename}`)) {
+                fetch(`/delete-file/${filename}`, {
+                    method: 'DELETE'
+                })
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById('message').innerText = data.success || data.error;
+                    loadFiles(); 
+                });
+            }
+        }
+        
+        function uploadJson() {
+            let fileInput = document.getElementById('jsonFileInput');
+            let file = fileInput.files[0];
+            if (!file) {
+                document.getElementById('message').innerText = 'Bitte wählen Sie eine JSON Datei aus';
+            return;
+            }
+    
+            let formData = new FormData();
+            formData.append('file', file);
+
+        fetch('/upload-json', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            document.getElementById('message').innerText = data.success || data.error;
+            loadFiles();
+        });
+}
+
+
+document.addEventListener('DOMContentLoaded', loadFiles);
+
+document.getElementById('fileInput').addEventListener('change', function() {
+    const file = this.files[0];
+    if (file) {
+        const fileName = file.name;
+        document.getElementById('fileLabel').textContent = fileName;
+        
+        // Automatically upload the file
+        let formData = new FormData();
+        formData.append('file', file);
+
+        fetch('/upload', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            document.getElementById('message').innerText = data.success || data.error;
+            loadFiles();
+        });
+    }
+});
+
+document.getElementById('jsonFileInput').addEventListener('change', function() {
+    const file = this.files[0];
+    if (file) {
+        const fileName = file.name;
+        document.getElementById('jsonFileLabel').textContent = fileName;
+        
+        // Automatically upload the JSON file
+        let formData = new FormData();
+        formData.append('file', file);
+
+        fetch('/upload-json', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            document.getElementById('message').innerText = data.success || data.error;
+            loadFiles();
+        });
+    }
+});
+    setInterval(loadFiles, 5000);
+    </script>
+    
+    
+</body>
+</html>
