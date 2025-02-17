@@ -8,7 +8,7 @@ Die Anwendung ermöglicht es, Dokumente (PDF, MD) zentral zu verwalten und in ei
 ---
 ## Installation
 
-Nacherfolgreichem clonen des Repositories und ausführen vom der Dockerumgebung sind folgende Schritte erforderlich:
+Nacherfolgreichem clonen des Repositories und ausführen der Dockerumgebung sind folgende Schritte erforderlich:
 
 ---
 ### 1. Umgebungsvariablen anpassen  
