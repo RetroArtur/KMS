@@ -1,0 +1,1793 @@
+{
+  "name": "My workflow",
+  "nodes": [
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "10646eae-ae46-4327-a4dc-9987c2d76173",
+              "name": "file_id",
+              "value": "={{ $json.fileName }}",
+              "type": "string"
+            },
+            {
+              "id": "dd0aa081-79e7-4714-8a67-1e898285554c",
+              "name": "folder_id",
+              "value": "={{ $json.directory }}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "include": "selected",
+        "includeFields": "data",
+        "options": {}
+      },
+      "id": "23d71cdf-e4f5-4693-92e4-4fb3a5fb5e2b",
+      "name": "Set File ID",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        40,
+        460
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "text",
+        "options": {}
+      },
+      "id": "ac4eeb53-e3e3-4dcb-a754-4cda751cc135",
+      "name": "Extract Document Text",
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1,
+      "position": [
+        520,
+        320
+      ],
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "options": {
+          "metadata": {
+            "metadataValues": [
+              {
+                "name": "file_id",
+                "value": "={{ $('Set File ID').item.json.file_id }}"
+              },
+              {
+                "name": "folder_id",
+                "value": "={{ $('Set File ID').item.json.folder_id }}"
+              }
+            ]
+          }
+        }
+      },
+      "id": "baf30f9e-f147-43dd-af35-20e01eba85d1",
+      "name": "Default Data Loader",
+      "type": "@n8n/n8n-nodes-langchain.documentDefaultDataLoader",
+      "typeVersion": 1,
+      "position": [
+        1240,
+        620
+      ]
+    },
+    {
+      "parameters": {
+        "chunkOverlap": 150,
+        "options": {}
+      },
+      "id": "65a75fcf-c345-402b-bc36-333ccc497368",
+      "name": "Recursive Character Text Splitter",
+      "type": "@n8n/n8n-nodes-langchain.textSplitterRecursiveCharacterTextSplitter",
+      "typeVersion": 1,
+      "position": [
+        1260,
+        740
+      ]
+    },
+    {
+      "parameters": {
+        "model": "nomic-embed-text:latest"
+      },
+      "id": "a6db84e3-a1bd-440c-bda8-8c874e7aeafa",
+      "name": "Embeddings Ollama1",
+      "type": "@n8n/n8n-nodes-langchain.embeddingsOllama",
+      "typeVersion": 1,
+      "position": [
+        1160,
+        620
+      ],
+      "credentials": {
+        "ollamaApi": {
+          "id": "wUCT5AWsekTZ66hN",
+          "name": "Ollama account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "insert",
+        "qdrantCollection": {
+          "__rl": true,
+          "value": "=zotero",
+          "mode": "id"
+        },
+        "options": {}
+      },
+      "id": "c50cfa03-83da-4bf3-ad5b-b5c5ff14e54d",
+      "name": "Qdrant Vector Store Insert",
+      "type": "@n8n/n8n-nodes-langchain.vectorStoreQdrant",
+      "typeVersion": 1,
+      "position": [
+        1160,
+        500
+      ],
+      "retryOnFail": false,
+      "credentials": {
+        "qdrantApi": {
+          "id": "vcrijM7t5daRaV18",
+          "name": "QdrantApi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "1b04f527-eb37-46aa-9563-6382056fd6a4",
+      "name": "Respond to Webhook",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        1980,
+        -300
+      ],
+      "retryOnFail": true
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "invoke_n8n_agent",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "16c7921e-a9b1-4246-9cc8-b96a019957d1",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -1180,
+        -320
+      ],
+      "webhookId": "4a839da9-b8a2-45f8-bcaf-c484f9a5912d"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "d6e7a5be-b11c-473a-9530-b987e101a5c7",
+              "leftValue": "={{ $('Read/Write Files from Disk').item.json.fileType }}",
+              "rightValue": "text",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "or"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        280,
+        340
+      ],
+      "id": "54f176de-9022-4dd5-86b4-754b16c2eeb9",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "fileSelector": "={{ $json.path }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.readWriteFile",
+      "typeVersion": 1,
+      "position": [
+        -200,
+        460
+      ],
+      "id": "a323a65b-4ec8-4d7b-9bbb-d6ae599a1ab4",
+      "name": "Read/Write Files from Disk"
+    },
+    {
+      "parameters": {
+        "triggerOn": "folder",
+        "path": "/data/shared/exports",
+        "events": [
+          "add"
+        ],
+        "options": {
+          "awaitWriteFinish": true,
+          "usePolling": true
+        }
+      },
+      "type": "n8n-nodes-base.localFileTrigger",
+      "typeVersion": 1,
+      "position": [
+        -460,
+        460
+      ],
+      "id": "d775824a-7eb0-46c3-8c1c-c6d94fe06008",
+      "name": "Local File Trigger"
+    },
+    {
+      "parameters": {
+        "jsCode": "let out = \"\"\nfor (const i in $input.all()) {\n  let itemText = \"--- CHUNK \" + i + \" ---\\n\"\n  itemText += $input.all()[i].json.document.pageContent + \"\\n\"\n  itemText += \"\\n\"\n  out += itemText\n}\n\nreturn {\n  'context': out\n};"
+      },
+      "id": "0b1c987d-58cf-487e-b3d7-bfc3d932cf36",
+      "name": "Prepare chunks",
+      "type": "n8n-nodes-base.code",
+      "position": [
+        -260,
+        -320
+      ],
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "jsonSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"answer\": {\n      \"type\": \"string\"\n    },\n    \"citations\": {\n      \"type\": \"array\",\n      \"items\": {\n        \"type\": \"number\"\n      }\n    }\n  }\n}"
+      },
+      "id": "a45df241-bc8d-4127-8ba1-1aa75bd35838",
+      "name": "Structured Output Parser",
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "position": [
+        140,
+        -200
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "b3259cff-edb6-48c1-9072-802254949646",
+              "name": "citations",
+              "value": "={{ ($json.citations || []).map((index) => {   const qdrantItem = $('Qdrant Vector Store').all()[index].json;   return '[' + qdrantItem.document.metadata.file_id + ', Zeile '           + qdrantItem.document.metadata.loc.lines.from + '-'          + qdrantItem.document.metadata.loc.lines.to + ']'; }) }}",
+              "type": "array"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "id": "221bff64-460c-4753-a014-37c45eede5e1",
+      "name": "Compose citations",
+      "type": "n8n-nodes-base.set",
+      "position": [
+        1540,
+        -220
+      ],
+      "typeVersion": 3.3
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "d77956c4-0ff4-4c64-80c2-9da9d4c8ad34",
+              "name": "output",
+              "type": "string",
+              "value": "={{ $json.answer }} {{ $if(!$json.citations.isEmpty(), \"\\n \\n\" + $json.citations.join(\"\\n\"), '') }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "460528bc-0f90-486f-a1da-51ed13d8b2d7",
+      "name": "Generate response",
+      "type": "n8n-nodes-base.set",
+      "position": [
+        1740,
+        -220
+      ],
+      "typeVersion": 3.3
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Use the following pieces of context to answer the question in german at the end. If you don't know the answer, just say that you don't know, don't try to make up an answer.VERY Important: In your response, also include ALL indexes of the chunks you used to generate the answer.\n\n{{ $json.context }}\n\nQuestion: {{ $('Webhook').first().json.body.chatInput }}\n\n\nHelpful Answer:",
+        "hasOutputParser": true
+      },
+      "id": "168d4172-ed1e-4a68-95d8-33b239d2fa03",
+      "name": "Answer the query based on chunks",
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "position": [
+        -20,
+        -320
+      ],
+      "typeVersion": 1.4,
+      "retryOnFail": true,
+      "maxTries": 2
+    },
+    {
+      "parameters": {
+        "model": "phi4:latest",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmOllama",
+      "typeVersion": 1,
+      "position": [
+        -20,
+        -200
+      ],
+      "id": "e886051f-6903-4fb0-96c0-1930c2c00c86",
+      "name": "Ollama Model",
+      "credentials": {
+        "ollamaApi": {
+          "id": "wUCT5AWsekTZ66hN",
+          "name": "Ollama account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "load",
+        "qdrantCollection": {
+          "__rl": true,
+          "value": "zotero",
+          "mode": "id"
+        },
+        "prompt": "={{$json.text}}",
+        "topK": "={{ 5 }}",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.vectorStoreQdrant",
+      "typeVersion": 1,
+      "position": [
+        -600,
+        -320
+      ],
+      "id": "7eff05c2-1b73-4e9a-ac3f-9319fe01946d",
+      "name": "Qdrant Vector Store2",
+      "credentials": {
+        "qdrantApi": {
+          "id": "vcrijM7t5daRaV18",
+          "name": "QdrantApi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": "nomic-embed-text:latest"
+      },
+      "type": "@n8n/n8n-nodes-langchain.embeddingsOllama",
+      "typeVersion": 1,
+      "position": [
+        -600,
+        -200
+      ],
+      "id": "4f4f6039-e45c-44a5-9a94-304bc01265ae",
+      "name": "Embeddings Ollama3",
+      "credentials": {
+        "ollamaApi": {
+          "id": "wUCT5AWsekTZ66hN",
+          "name": "Ollama account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Generate a very simple query and nothing else, not longer than four words, that will be used as a query to search through a search engine that provides the needed knowledge to answer the user question. Keep High-Value-Token-Keywords in the query.\n\nYour Output should be german and still use the keywords of the user prompt.\n\n\nQuestion: {{ $('Webhook').item.json.body.chatInput }}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.5,
+      "position": [
+        -940,
+        -320
+      ],
+      "id": "d6e13f18-128f-4776-be0d-10726ab645f1",
+      "name": "Basic LLM Chain"
+    },
+    {
+      "parameters": {
+        "model": "phi4:latest",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOllama",
+      "typeVersion": 1,
+      "position": [
+        -940,
+        -120
+      ],
+      "id": "c1acf5d9-2422-4f0f-8f0c-eae11ffe2216",
+      "name": "Ollama Chat Model3",
+      "credentials": {
+        "ollamaApi": {
+          "id": "wUCT5AWsekTZ66hN",
+          "name": "Ollama account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "pdf",
+        "options": {}
+      },
+      "id": "351aa0a1-c81b-47da-813d-4e3c0927fe08",
+      "name": "Extract Document Text1",
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1,
+      "position": [
+        480,
+        640
+      ],
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "content": "## Chat-Prompt\nWebhook über WebUI",
+        "height": 320,
+        "color": 6
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -1240,
+        -460
+      ],
+      "typeVersion": 1,
+      "id": "7c7ed7c5-af62-4a7d-b85d-99569b7035a2",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "content": "## Generierung Vector Query\nKI-Agent erstellt einfache Query zum Kontext des Prompts\n",
+        "height": 320,
+        "width": 300,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -960,
+        -460
+      ],
+      "typeVersion": 1,
+      "id": "a1302685-b56c-4ca1-87a0-3a4db16962ef",
+      "name": "Sticky Note2"
+    },
+    {
+      "parameters": {
+        "content": "## Durchsuchung Qdrant Vector Store\n",
+        "height": 680,
+        "width": 280,
+        "color": 6
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -620,
+        -460
+      ],
+      "typeVersion": 1,
+      "id": "c2a579a4-f524-4918-b148-61733e0905dc",
+      "name": "Sticky Note3"
+    },
+    {
+      "parameters": {
+        "content": "## Unterteilung in Chunks\nDamit der AI-Agent die Information zu der jeweiligen Datei zuordnen kann",
+        "height": 680,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -320,
+        -460
+      ],
+      "typeVersion": 1,
+      "id": "2b74d8a0-d37a-4ec7-b810-0a7ef6cab4f8",
+      "name": "Sticky Note4"
+    },
+    {
+      "parameters": {
+        "content": "## AI-Agent beantwortet\nGibt Antwort mit Output Parser um sicher zu stellen, dass die Quellen angegeben werden",
+        "height": 680,
+        "width": 340,
+        "color": 6
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -60,
+        -460
+      ],
+      "typeVersion": 1,
+      "id": "6b297ddf-2508-4af8-ba7d-c1efc42e3234",
+      "name": "Sticky Note5"
+    },
+    {
+      "parameters": {
+        "content": "## Quellen einfügen\nErsetzt Placeholder mit der tatsächlichen Quellenangabe",
+        "height": 840,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        1420,
+        -620
+      ],
+      "typeVersion": 1,
+      "id": "59b68ef7-240a-4660-8e10-b2b86c59d9ff",
+      "name": "Sticky Note6"
+    },
+    {
+      "parameters": {
+        "content": "## Finaler Output\nErstellt finale JSON-Datei für den Webhook",
+        "height": 840,
+        "color": 6
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        1680,
+        -620
+      ],
+      "typeVersion": 1,
+      "id": "8ebc0846-c336-48bf-83b0-aed543ba759f",
+      "name": "Sticky Note7"
+    },
+    {
+      "parameters": {
+        "content": "## Antwort an Webhook",
+        "height": 840,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        1940,
+        -620
+      ],
+      "typeVersion": 1,
+      "id": "0b54beaf-f37b-450f-8333-88f283c95ee1",
+      "name": "Sticky Note8"
+    },
+    {
+      "parameters": {
+        "content": "## Event-Listener\nWartet auf neue Datei im /data/shared/Exports Ordner",
+        "height": 320,
+        "color": 3
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -520,
+        320
+      ],
+      "typeVersion": 1,
+      "id": "96fa901f-6cd7-47ce-86aa-df9541819b77",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "content": "## Datei einlesen",
+        "height": 320,
+        "color": 2
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -260,
+        320
+      ],
+      "typeVersion": 1,
+      "id": "3ec474c2-3248-41f5-9608-1acec1d6cea5",
+      "name": "Sticky Note9"
+    },
+    {
+      "parameters": {
+        "content": "## Metadaten hinzufügen\nGibt der Datei die nötigen Metadaten zum zitieren",
+        "height": 320,
+        "color": 3
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        0,
+        320
+      ],
+      "typeVersion": 1,
+      "id": "515bb421-4b6a-4419-bdeb-cad78b9c4691",
+      "name": "Sticky Note10"
+    },
+    {
+      "parameters": {
+        "content": "## Extrahieren des Textes",
+        "height": 660,
+        "width": 440,
+        "color": 2
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        260,
+        260
+      ],
+      "typeVersion": 1,
+      "id": "9961c9f6-5029-4f92-91fa-e10b365b82f7",
+      "name": "Sticky Note11"
+    },
+    {
+      "parameters": {
+        "content": "## PDF säubern\nEntfernt unnötige Metadaten, extrahiert den Text und spaltet wenn nötig",
+        "height": 260,
+        "color": 3
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        720,
+        540
+      ],
+      "typeVersion": 1,
+      "id": "af3f6d75-e959-498e-b97d-54594f02c65c",
+      "name": "Sticky Note12"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Hole alle Items (falls es mehrere gibt – normalerweise ein einzelnes Item)\nconst allItems = $input.all();\n\n// Für jedes Item extrahieren wir nur das \"text\"-Feld\nconst newItems = allItems.map(item => {\n  return {\n    json: {\n      text: item.json.text  // Nur den reinen Text übergeben\n    }\n  };\n});\n\nreturn newItems;\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        740,
+        660
+      ],
+      "id": "1cefe28b-c5ef-4f40-a3e7-1d32e507e23b",
+      "name": "Code"
+    },
+    {
+      "parameters": {
+        "content": "## Einbindung Qdrant\nZusätzlicher Zusatz der vorher generierten Metadaten der Set-Node",
+        "height": 460,
+        "width": 1040,
+        "color": 2
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        980,
+        420
+      ],
+      "typeVersion": 1,
+      "id": "027f3c6d-24d0-4956-807f-e0100d804c55",
+      "name": "Sticky Note13"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "31a44e14-a66c-4dfd-929c-92b7a6c5af24",
+              "leftValue": "={{ $json.citations }}",
+              "rightValue": "",
+              "operator": {
+                "type": "array",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        300,
+        0
+      ],
+      "id": "04e04b3e-c906-40a9-8ddb-7c22f353e693",
+      "name": "If3"
+    },
+    {
+      "parameters": {
+        "url": "=https://www.googleapis.com/customsearch/v1?key=AIzaSyBG3GHI-qRny_4twL2K2htFhN6A9HzagGQ&cx=c1afad8ff256f4e33&q={{ $('Basic LLM Chain').first().json.text }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        540,
+        0
+      ],
+      "id": "eccd019d-e5fa-485d-b65d-50d98ec8a964",
+      "name": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Die Eingabe-Daten aus dem vorherigen Node abrufen\nconst inputData = items[0].json.items || [];\n\n// Die JSON-Daten umwandeln\nconst outputData = inputData.map(item => {\n    return { context: item.snippet };\n});\n\n// Die umgewandelten Daten als Ausgabe zurückgeben\nreturn outputData.map(entry => ({ json: entry }));\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        720,
+        0
+      ],
+      "id": "a0cbfe5e-0bff-4f80-933b-c1a2b6225d63",
+      "name": "Code1"
+    },
+    {
+      "parameters": {
+        "jsCode": "let out = \"\"\nfor (const i in $input.all()) {\n  let itemText = \"--- CHUNK \" + i + \" ---\\n\"\n  itemText += $input.all()[i].json.context + \"\\n\"\n  itemText += \"\\n\"\n  out += itemText\n}\n\nreturn {\n  'context': out\n};"
+      },
+      "id": "5b01f3bc-d284-4cf2-9443-bee88d7f2a15",
+      "name": "Prepare chunks2",
+      "type": "n8n-nodes-base.code",
+      "position": [
+        900,
+        0
+      ],
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Use the following pieces of context to answer the question in german at the end. If you don't know the answer, just say that you don't know, don't try to make up an answer.VERY Important: In your response, also include the the indexes of the chunks you used to generate the answer.\n\n{{ $json.context }}\n\nQuestion: {{ $('Webhook').first().json.body.chatInput }}\n\n\nHelpful Answer:",
+        "hasOutputParser": true
+      },
+      "id": "2f08f32e-990f-451a-99cb-7a7418382933",
+      "name": "Answer the query based on chunks1",
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "position": [
+        1080,
+        0
+      ],
+      "typeVersion": 1.4,
+      "retryOnFail": true,
+      "maxTries": 2
+    },
+    {
+      "parameters": {
+        "model": "phi4:latest",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmOllama",
+      "typeVersion": 1,
+      "position": [
+        1080,
+        120
+      ],
+      "id": "d7967b55-ab01-4d57-95b6-5f96d2f876b5",
+      "name": "Ollama Model1",
+      "credentials": {
+        "ollamaApi": {
+          "id": "wUCT5AWsekTZ66hN",
+          "name": "Ollama account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsonSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"answer\": {\n      \"type\": \"string\"\n    },\n    \"citations\": {\n      \"type\": \"array\",\n      \"items\": {\n        \"type\": \"number\"\n      }\n    }\n  }\n}"
+      },
+      "id": "fe28de95-a897-4264-bde4-bd2e92edb9ba",
+      "name": "Structured Output Parser1",
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "position": [
+        1240,
+        120
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "b3259cff-edb6-48c1-9072-802254949646",
+              "name": "citations",
+              "value": "={{ ($json.citations || []).map((index) => {   \n    const googleItem = $('HTTP Request').first().json.items[index];   \n    return googleItem ? `[${googleItem.link}]` : '[Kein Link gefunden]'; \n});  }}",
+              "type": "array"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "id": "be89451d-25cd-482b-91dd-a8981e94d02b",
+      "name": "Compose citations1",
+      "type": "n8n-nodes-base.set",
+      "position": [
+        1480,
+        0
+      ],
+      "typeVersion": 3.3
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "d77956c4-0ff4-4c64-80c2-9da9d4c8ad34",
+              "name": "output",
+              "type": "string",
+              "value": "={{ $json.answer }} {{ $if(!$json.citations.isEmpty(), \"\\n \\n\" + $json.citations.join(\"\\n\"), '') }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "a3deae31-992d-443c-9d4d-61fe98970229",
+      "name": "Generate response1",
+      "type": "n8n-nodes-base.set",
+      "position": [
+        1740,
+        0
+      ],
+      "typeVersion": 3.3
+    },
+    {
+      "parameters": {
+        "content": "## AI-Agent beantwortet\nGibt Antwort mit Output Parser um sicher zu stellen, dass die Quellen angegeben werden",
+        "height": 320,
+        "width": 340,
+        "color": 6
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        1060,
+        -100
+      ],
+      "typeVersion": 1,
+      "id": "db6eced5-a154-4d13-9da7-1edcd34a0035",
+      "name": "Sticky Note14"
+    },
+    {
+      "parameters": {
+        "content": "## Online-Recherche\nIm Fall von fehlenden Quellen wird die Google Search API verwendet um nach Informationen zu suchen",
+        "height": 320,
+        "width": 560,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        480,
+        -100
+      ],
+      "typeVersion": 1,
+      "id": "365dc78e-b363-4054-93d5-b1630ebd31dc",
+      "name": "Sticky Note15"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "31a44e14-a66c-4dfd-929c-92b7a6c5af24",
+              "leftValue": "={{ $json.citations }}",
+              "rightValue": "",
+              "operator": {
+                "type": "array",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        320,
+        -320
+      ],
+      "id": "eacad951-6508-4ab2-862b-425b0d2985ed",
+      "name": "If4"
+    },
+    {
+      "parameters": {
+        "mode": "load",
+        "qdrantCollection": {
+          "__rl": true,
+          "value": "obsidian",
+          "mode": "id"
+        },
+        "prompt": "={{ $('Basic LLM Chain').first().json.text }}",
+        "topK": "={{ 5 }}",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.vectorStoreQdrant",
+      "typeVersion": 1,
+      "position": [
+        -600,
+        0
+      ],
+      "id": "3699a9c4-d7e3-4218-b8d8-0c7406e92db9",
+      "name": "Qdrant Vector Store",
+      "credentials": {
+        "qdrantApi": {
+          "id": "vcrijM7t5daRaV18",
+          "name": "QdrantApi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": "nomic-embed-text:latest"
+      },
+      "type": "@n8n/n8n-nodes-langchain.embeddingsOllama",
+      "typeVersion": 1,
+      "position": [
+        -600,
+        120
+      ],
+      "id": "1a335d8b-152d-4944-a442-7ab748fc059b",
+      "name": "Embeddings Ollama",
+      "credentials": {
+        "ollamaApi": {
+          "id": "wUCT5AWsekTZ66hN",
+          "name": "Ollama account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "let out = \"\"\nfor (const i in $input.all()) {\n  let itemText = \"--- CHUNK \" + i + \" ---\\n\"\n  itemText += $input.all()[i].json.document.pageContent + \"\\n\"\n  itemText += \"\\n\"\n  out += itemText\n}\n\nreturn {\n  'context': out\n};"
+      },
+      "id": "6692dfeb-5220-403f-b44d-2c7d4f5f7a6b",
+      "name": "Prepare chunks1",
+      "type": "n8n-nodes-base.code",
+      "position": [
+        -260,
+        0
+      ],
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Use the following pieces of context to answer the question in german at the end. If you don't know the answer, just say that you don't know, don't try to make up an answer.VERY Important: In your response, also include ALL indexes of the chunks you used to generate the answer and add them into the \"citations\" key.\n\n{{ $json.context }}\n\nQuestion: {{ $('Webhook').first().json.body.chatInput }}\n\n\nHelpful Answer:",
+        "hasOutputParser": true
+      },
+      "id": "e7df11dc-7c75-44c6-ae88-6794b029491d",
+      "name": "Answer the query based on chunks2",
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "position": [
+        -20,
+        0
+      ],
+      "typeVersion": 1.4,
+      "retryOnFail": true,
+      "maxTries": 2
+    },
+    {
+      "parameters": {
+        "model": "phi4:latest",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOllama",
+      "typeVersion": 1,
+      "position": [
+        -20,
+        120
+      ],
+      "id": "8289b764-be03-4a2a-89c2-9721237fa34b",
+      "name": "Ollama Chat Model",
+      "credentials": {
+        "ollamaApi": {
+          "id": "wUCT5AWsekTZ66hN",
+          "name": "Ollama account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsonSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"answer\": {\n      \"type\": \"string\"\n    },\n    \"citations\": {\n      \"type\": \"array\",\n      \"items\": {\n        \"type\": \"number\"\n      }\n    }\n  }\n}"
+      },
+      "id": "414cd9f6-6c0a-4dc1-8e10-87429ac3f641",
+      "name": "Structured Output Parser2",
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "position": [
+        140,
+        120
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "options": {
+          "metadata": {
+            "metadataValues": [
+              {
+                "name": "file_id",
+                "value": "={{ $('Set File ID').item.json.file_id }}"
+              },
+              {
+                "name": "folder_id",
+                "value": "={{ $('Set File ID').item.json.folder_id }}"
+              }
+            ]
+          }
+        }
+      },
+      "id": "4616a2d2-ef00-4fbf-ad07-3bf688c676eb",
+      "name": "Default Data Loader1",
+      "type": "@n8n/n8n-nodes-langchain.documentDefaultDataLoader",
+      "typeVersion": 1,
+      "position": [
+        1700,
+        620
+      ]
+    },
+    {
+      "parameters": {
+        "chunkOverlap": 150,
+        "options": {}
+      },
+      "id": "07c703c1-fae6-4ae5-ab50-4f01ede6a469",
+      "name": "Recursive Character Text Splitter1",
+      "type": "@n8n/n8n-nodes-langchain.textSplitterRecursiveCharacterTextSplitter",
+      "typeVersion": 1,
+      "position": [
+        1700,
+        740
+      ]
+    },
+    {
+      "parameters": {
+        "model": "nomic-embed-text:latest"
+      },
+      "id": "e002f1a2-10d0-49d8-b052-5770514ec1c6",
+      "name": "Embeddings Ollama2",
+      "type": "@n8n/n8n-nodes-langchain.embeddingsOllama",
+      "typeVersion": 1,
+      "position": [
+        1620,
+        620
+      ],
+      "credentials": {
+        "ollamaApi": {
+          "id": "wUCT5AWsekTZ66hN",
+          "name": "Ollama account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "insert",
+        "qdrantCollection": {
+          "__rl": true,
+          "value": "=obsidian",
+          "mode": "id"
+        },
+        "options": {}
+      },
+      "id": "082bab25-a30e-451b-979e-c45f3bbdc74f",
+      "name": "Qdrant Vector Store Insert1",
+      "type": "@n8n/n8n-nodes-langchain.vectorStoreQdrant",
+      "typeVersion": 1,
+      "position": [
+        1620,
+        500
+      ],
+      "credentials": {
+        "qdrantApi": {
+          "id": "vcrijM7t5daRaV18",
+          "name": "QdrantApi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "d6e7a5be-b11c-473a-9530-b987e101a5c7",
+              "leftValue": "={{ $('Read/Write Files from Disk').item.json.fileType }}",
+              "rightValue": "pdf",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        280,
+        660
+      ],
+      "id": "65a6b46a-6162-4fd6-9f55-10810cc79fc6",
+      "name": "If1"
+    },
+    {
+      "parameters": {
+        "jsCode": "const maxChars = 800000; // Anzahl Zeichen pro Chunk (ca. 32MB)\n\nconst allItems = $input.all();\nconst newItems = [];\n\nallItems.forEach(item => {\n    const text = item.json.text;\n\n    if (text.length <= maxChars) {\n        // Falls kleiner als das Limit, direkt übernehmen\n        newItems.push({ json: { text } });\n    } else {\n        // Falls zu groß: In Chunks splitten\n        let start = 0;\n        let chunkIndex = 0;\n\n        while (start < text.length) {\n            let end = Math.min(start + maxChars, text.length);\n            let chunkText = text.slice(start, end);\n\n            newItems.push({\n                json: { \n                    text: chunkText, \n                    chunkIndex\n                }\n            });\n\n            start = end;\n            chunkIndex++;\n        }\n    }\n});\n\nreturn newItems;\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        840,
+        660
+      ],
+      "id": "22664c8b-3236-4770-8c2d-26cc7f115696",
+      "name": "Code2"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "c0e61857-4ab3-4e82-bb86-e2f8acf6c9e5",
+              "name": "answer",
+              "value": "={{\n  (() => {\n    let text = $json.answer;\n    const citations = $json.citations || [];\n    const usedCitations = {}; // Speichert die bereits verwendeten Zitationen (Chunk-Nummer -> Zitationsnummer)\n\n    const regex = /\\(([^)]*chunc?k[^)]*)\\)|chunk\\s*([0-9]+)/gi;\n\n    text = text.replace(regex, (match, bracketedChunkContent, unbracketedChunkNumber) => {\n      let chunkNumbers = [];\n\n      if (bracketedChunkContent) {\n        chunkNumbers = bracketedChunkContent.split(/[\\s,und;]+/).map(s => s.replace(/[^0-9]/g, \"\"));\n      } else if (unbracketedChunkNumber) {\n        chunkNumbers = [unbracketedChunkNumber];\n      }\n\n      const citationIndices = [];\n\n      for (const chunkNumber of chunkNumbers) {\n        const citationNumber = parseInt(chunkNumber);\n\n        // Überprüfen, ob die Chunk-Nummer bereits verwendet wurde\n        let citationNumberUsed = usedCitations[citationNumber];\n\n        if (citationNumberUsed) {\n          citationIndices.push(citationNumberUsed); // Bereits verwendete Zitationsnummer verwenden\n        } else {\n          const citationIndex = citations.indexOf(citationNumber);\n\n          if (citationIndex !== -1) {\n            const newCitationNumber = citationIndex + 1;\n            usedCitations[citationNumber] = newCitationNumber; // Zuordnung speichern\n            citationIndices.push(newCitationNumber);\n          } \n        }\n      }\n\n      return `[${citationIndices.join(\", \")}]`;\n    });\n\n    return text;\n  })()\n}}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1440,
+        -220
+      ],
+      "id": "8482de80-90fb-46f3-b892-826c71ae8956",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "d77956c4-0ff4-4c64-80c2-9da9d4c8ad34",
+              "name": "output",
+              "type": "string",
+              "value": "={{ $json.answer }} {{ $if(!$json.citations.isEmpty(), \"\\n \\n\" + $json.citations.join(\"\\n\"), '') }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "f68695a8-2a73-45e0-bee9-d187acb807c3",
+      "name": "Generate response2",
+      "type": "n8n-nodes-base.set",
+      "position": [
+        1740,
+        -440
+      ],
+      "typeVersion": 3.3
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "b3259cff-edb6-48c1-9072-802254949646",
+              "name": "citations",
+              "value": "={{ ($json.citations || []).map((index) => {   const qdrantItem = $('Qdrant Vector Store2').all()[index].json;   return '[' + qdrantItem.document.metadata.file_id + ', Zeile '           + qdrantItem.document.metadata.loc.lines.from + '-'          + qdrantItem.document.metadata.loc.lines.to + ']'; }) }}",
+              "type": "array"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "id": "49610e07-affe-41ec-89db-c988a5429bb6",
+      "name": "Compose citations2",
+      "type": "n8n-nodes-base.set",
+      "position": [
+        1540,
+        -440
+      ],
+      "typeVersion": 3.3
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "c0e61857-4ab3-4e82-bb86-e2f8acf6c9e5",
+              "name": "answer",
+              "value": "={{\n  (() => {\n    let text = $json.answer;\n    const citations = $json.citations || [];\n    const usedCitations = {}; // Speichert die bereits verwendeten Zitationen (Chunk-Nummer -> Zitationsnummer)\n\n    const regex = /\\(([^)]*chunc?k[^)]*)\\)|chunk\\s*([0-9]+)/gi;\n\n    text = text.replace(regex, (match, bracketedChunkContent, unbracketedChunkNumber) => {\n      let chunkNumbers = [];\n\n      if (bracketedChunkContent) {\n        chunkNumbers = bracketedChunkContent.split(/[\\s,und;]+/).map(s => s.replace(/[^0-9]/g, \"\"));\n      } else if (unbracketedChunkNumber) {\n        chunkNumbers = [unbracketedChunkNumber];\n      }\n\n      const citationIndices = [];\n\n      for (const chunkNumber of chunkNumbers) {\n        const citationNumber = parseInt(chunkNumber);\n\n        // Überprüfen, ob die Chunk-Nummer bereits verwendet wurde\n        let citationNumberUsed = usedCitations[citationNumber];\n\n        if (citationNumberUsed) {\n          citationIndices.push(citationNumberUsed); // Bereits verwendete Zitationsnummer verwenden\n        } else {\n          const citationIndex = citations.indexOf(citationNumber);\n\n          if (citationIndex !== -1) {\n            const newCitationNumber = citationIndex + 1;\n            usedCitations[citationNumber] = newCitationNumber; // Zuordnung speichern\n            citationIndices.push(newCitationNumber);\n          } \n        }\n      }\n\n      return `[${citationIndices.join(\", \")}]`;\n    });\n\n    return text;\n  })()\n}}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1440,
+        -440
+      ],
+      "id": "b51c41bb-58ab-4064-8f2e-79d77e4cb275",
+      "name": "Edit Fields1"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Set File ID": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract Document Text": {
+      "main": [
+        [
+          {
+            "node": "Qdrant Vector Store Insert1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Default Data Loader": {
+      "ai_document": [
+        [
+          {
+            "node": "Qdrant Vector Store Insert",
+            "type": "ai_document",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Recursive Character Text Splitter": {
+      "ai_textSplitter": [
+        [
+          {
+            "node": "Default Data Loader",
+            "type": "ai_textSplitter",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Embeddings Ollama1": {
+      "ai_embedding": [
+        [
+          {
+            "node": "Qdrant Vector Store Insert",
+            "type": "ai_embedding",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read/Write Files from Disk": {
+      "main": [
+        [
+          {
+            "node": "Set File ID",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Local File Trigger": {
+      "main": [
+        [
+          {
+            "node": "Read/Write Files from Disk",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Extract Document Text",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "If1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare chunks": {
+      "main": [
+        [
+          {
+            "node": "Answer the query based on chunks",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Answer the query based on chunks",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Compose citations": {
+      "main": [
+        [
+          {
+            "node": "Generate response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Answer the query based on chunks": {
+      "main": [
+        [
+          {
+            "node": "If4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Ollama Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Answer the query based on chunks",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Qdrant Vector Store2": {
+      "main": [
+        [
+          {
+            "node": "Prepare chunks",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Embeddings Ollama3": {
+      "ai_embedding": [
+        [
+          {
+            "node": "Qdrant Vector Store2",
+            "type": "ai_embedding",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate response": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Basic LLM Chain": {
+      "main": [
+        [
+          {
+            "node": "Qdrant Vector Store2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Ollama Chat Model3": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract Document Text1": {
+      "main": [
+        [
+          {
+            "node": "Code",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Qdrant Vector Store Insert": {
+      "main": [
+        []
+      ]
+    },
+    "Code": {
+      "main": [
+        [
+          {
+            "node": "Code2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If3": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Code1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code1": {
+      "main": [
+        [
+          {
+            "node": "Prepare chunks2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare chunks2": {
+      "main": [
+        [
+          {
+            "node": "Answer the query based on chunks1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Ollama Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Answer the query based on chunks1",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser1": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Answer the query based on chunks1",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Answer the query based on chunks1": {
+      "main": [
+        [
+          {
+            "node": "Compose citations1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Compose citations1": {
+      "main": [
+        [
+          {
+            "node": "Generate response1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate response1": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If4": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Qdrant Vector Store",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Embeddings Ollama": {
+      "ai_embedding": [
+        [
+          {
+            "node": "Qdrant Vector Store",
+            "type": "ai_embedding",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare chunks1": {
+      "main": [
+        [
+          {
+            "node": "Answer the query based on chunks2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Qdrant Vector Store": {
+      "main": [
+        [
+          {
+            "node": "Prepare chunks1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Ollama Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Answer the query based on chunks2",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser2": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Answer the query based on chunks2",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Answer the query based on chunks2": {
+      "main": [
+        [
+          {
+            "node": "If3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Default Data Loader1": {
+      "ai_document": [
+        [
+          {
+            "node": "Qdrant Vector Store Insert1",
+            "type": "ai_document",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Recursive Character Text Splitter1": {
+      "ai_textSplitter": [
+        [
+          {
+            "node": "Default Data Loader1",
+            "type": "ai_textSplitter",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Embeddings Ollama2": {
+      "ai_embedding": [
+        [
+          {
+            "node": "Qdrant Vector Store Insert1",
+            "type": "ai_embedding",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If1": {
+      "main": [
+        [
+          {
+            "node": "Extract Document Text1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Respond to Webhook": {
+      "main": [
+        []
+      ]
+    },
+    "Code2": {
+      "main": [
+        [
+          {
+            "node": "Qdrant Vector Store Insert",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Compose citations",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate response2": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields1": {
+      "main": [
+        [
+          {
+            "node": "Compose citations2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Compose citations2": {
+      "main": [
+        [
+          {
+            "node": "Generate response2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "b4886502-54eb-4573-a5d2-2c47986e0084",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "558d88703fb65b2d0e44613bc35916258b0f0bf983c5d4730c00c424b77ca36a"
+  },
+  "id": "ctOhNYciHnxg7oQD",
+  "tags": []
+}
