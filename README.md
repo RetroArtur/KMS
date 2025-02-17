@@ -8,7 +8,27 @@ Die Anwendung ermöglicht es, Dokumente (PDF, MD) zentral zu verwalten und in ei
 ---
 ## Installation
 
-Eine Einfache Installation ist über Docker Desktop möglich oder indem man das Repository cloned und per docker compose hochfährt.
+Nacherfolgreichem clonen des Repositories und ausführen vom der Dockerumgebung sind folgende Schritte erforderlich:
+
+---
+### 1. Umgebungsvariablen anpassen  
+- Die Datei `.env.txt` in `.env` umbenennen.  
+- Inhalte nach Bedarf anpassen.  
+
+### 2. Workflow in n8n importieren  
+- In n8n unter **"Create Workflow" → "Import from File"** den Workflow importieren.  
+- Die Datei **`My_Workflow.json`** aus dem **Mount-Folder** auswählen.  
+
+### 3. Workflow anpassen & Credentials setzen  
+- Den importierten Workflow an den **Container** anpassen.  
+- Die notwendigen **Credentials für externe Dienste** in n8n erstellen und ausfüllen.  
+
+### 4. n8n in OpenWebUI als Funktion einbinden  
+- In **OpenWebUI** unter **"Administration" → "Funktionen"** die Datei **`n8n_pipe.py`** hinzufügen.  
+- In **`n8n_pipe.py`** die **Webhook-URL** mit der URL des n8n-Webhooks ersetzen.  
+
+### Wichtiger Hinweis  
+Da der Webhook häufig einen Timeout verursacht, sollte die Seite in OpenWebUI **während der Generierung der Antwort einmalig neu geladen werden**, damit die Antwort korrekt angezeigt wird.
 
 ---
 ## Architektur und Komponenten
